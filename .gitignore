@@ -1,0 +1,16 @@
+# ファイル形式
+*.md
+*.pdf
+*.html
+*.png
+
+# outputsは無視
+outputs/
+
+# cache
+__pycache__/
+
+# data
+1droplet/230724
+2droplets/230927
+5droplets/230928
