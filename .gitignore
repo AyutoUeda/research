@@ -8,6 +8,7 @@
 outputs/
 
 # cache
+*.pyc
 __pycache__/
 
 # data
