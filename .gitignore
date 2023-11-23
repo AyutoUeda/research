@@ -3,9 +3,12 @@
 *.pdf
 *.html
 *.png
-
+*.csv
 # outputsは無視
 outputs/
+
+# model
+1droplet/model/
 
 # cache
 *.pyc
