@@ -358,9 +358,8 @@ save_output = [{
 }]
 
 import csv
-"""
+
 with open('new_model_log_oscillated.csv','a') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
     # writer.writeheader()
     writer.writerows(save_output)
-"""
