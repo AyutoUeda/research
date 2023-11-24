@@ -19,6 +19,15 @@ from sklearn.preprocessing import MinMaxScaler
 from callback import tcn
 from callback import earlystopping
 
+import argparse
+
+parser = argparse.ArgumentParser(description='Set hyper parameters')
+parser.add_argument('--epochs', type=int, default=20, metavar='N',
+                    help='epochs (default: 20)')
+
+args = parser.parse_args()
+
+
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -121,7 +130,7 @@ for i, (x,t) in enumerate(train_dataloader):
     if i == 1:
         break
 
-debag
+debag = ok
 [1]
 0.7542, 0.7518, 0.7512,  ..., 0.7702, 0.7681, 0.7664
 
@@ -175,8 +184,13 @@ def evaluate(model, epoch=None, train_loss=None):
         
         return test_loss
 
+
+
+epoch_list = [20, 30, 50, 100]
+    
+
 # =====Model define=====
-epochs = 30
+epochs = args.epochs
 lr = 1e-3
 level = 3
 h_dim = 15
@@ -197,19 +211,41 @@ for epoch in range(1, epochs + 1):
     loss["val_loss"].append(tloss)
 
 """check reproducibility ==> ok
- [epoch: 1] Train loss: 0.125471         Test set: Average loss: 0.156144
+[epoch: 1] Train loss: 0.125471         Test set: Average loss: 0.156144
 
 
- [epoch: 5] Train loss: 0.002935         Test set: Average loss: 0.017688
+[epoch: 5] Train loss: 0.002935         Test set: Average loss: 0.017688
 
 
- [epoch: 10] Train loss: 0.000454        Test set: Average loss: 0.005820
+[epoch: 10] Train loss: 0.000454        Test set: Average loss: 0.005820
 
 
- [epoch: 15] Train loss: 0.000072        Test set: Average loss: 0.004358
+[epoch: 15] Train loss: 0.000072        Test set: Average loss: 0.004358
 
 
- [epoch: 20] Train loss: 0.000051        Test set: Average loss: 0.003631
+[epoch: 20] Train loss: 0.000051        Test set: Average loss: 0.003631
+
+
+epoch 30
+[epoch: 1] Train loss: 0.125471         Test set: Average loss: 0.156144
+
+
+[epoch: 5] Train loss: 0.002935         Test set: Average loss: 0.017688
+
+
+[epoch: 10] Train loss: 0.000454        Test set: Average loss: 0.005820
+
+
+[epoch: 15] Train loss: 0.000072        Test set: Average loss: 0.004358
+
+
+[epoch: 20] Train loss: 0.000051        Test set: Average loss: 0.003631
+
+
+[epoch: 25] Train loss: 0.000048        Test set: Average loss: 0.003686
+
+
+[epoch: 30] Train loss: 0.000054        Test set: Average loss: 0.003820
 """
 
 # =====plot loss=====
@@ -236,8 +272,9 @@ plt.title("TCN \n batch:{}, t_step:{}, epoch:{} \n level:{}, h_dim:{}, k_size:{}
 
 loss_path = "outputs/oscillated_loss/tcnloss_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
     batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
-# plt.savefig(loss_path)
-plt.show()
+plt.savefig(loss_path)
+# plt.show()
+plt.clf()
 
 
 # =====prediction=====
@@ -289,14 +326,17 @@ plt.title("TCN \n val loss:{:6f} \n batch:{}, t_step:{}, epoch:{} \n level:{}, h
     loss["val_loss"][-1], batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
 plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0)
 
-pred_path = "outputs/oscillated/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
+pred_path = "outputs/pred_oscillated/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
     batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
 
-# plt.savefig(pred_path)
+plt.savefig(pred_path)
 
-plt.show()
+# plt.show()
+plt.clf()
 
 # =====model save and log========
+print("model save")
+
 model_path = "model/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.pth".format(
     batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
 # torch.save(model, model_path)
@@ -318,8 +358,9 @@ save_output = [{
 }]
 
 import csv
-
-with open('model_log_oscillated.csv','w') as csvfile:
+"""
+with open('new_model_log_oscillated.csv','a') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
-    writer.writeheader()
+    # writer.writeheader()
     writer.writerows(save_output)
+"""
