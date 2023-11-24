@@ -22,8 +22,8 @@ from callback import earlystopping
 import argparse
 
 parser = argparse.ArgumentParser(description='Set hyper parameters')
-parser.add_argument('--epochs', type=int, default=20, metavar='N',
-                    help='epochs (default: 20)')
+parser.add_argument('--epochs', type=int, default=5, metavar='N',
+                    help='epochs (default: 5)')
 
 args = parser.parse_args()
 
@@ -257,7 +257,7 @@ plt.rcParams['ytick.major.width'] = 1.0#y軸主目盛り線の線幅
 plt.rcParams['font.size'] = 8 #フォントの大きさ
 plt.rcParams['axes.linewidth'] = 1.0# 軸の線幅edge linewidth。囲みの太さ
 
-plt.xticks(np.arange(0, len(loss["val_loss"]), 2))
+plt.xticks(np.arange(1, len(loss["val_loss"])+1, 2))
 plt.xlim(0, len(loss["val_loss"]))
 plt.ylim(0, max(loss["val_loss"]))
 
@@ -270,11 +270,12 @@ plt.legend()
 plt.title("TCN \n batch:{}, t_step:{}, epoch:{} \n level:{}, h_dim:{}, k_size:{}, lr:{}".format(
     batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
 
+plt.tight_layout()
+
 loss_path = "outputs/oscillated_loss/tcnloss_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
     batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
 plt.savefig(loss_path)
-# plt.show()
-plt.clf()
+plt.show()
 
 
 # =====prediction=====
@@ -331,8 +332,7 @@ pred_path = "outputs/pred_oscillated/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_
 
 plt.savefig(pred_path)
 
-# plt.show()
-plt.clf()
+plt.show()
 
 # =====model save and log========
 print("model save")
