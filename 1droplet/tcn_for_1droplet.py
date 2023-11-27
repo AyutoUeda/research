@@ -24,6 +24,8 @@ import argparse
 parser = argparse.ArgumentParser(description='Set hyper parameters')
 parser.add_argument('--epochs', type=int, default=5, metavar='N',
                     help='epochs (default: 5)')
+parser.add_argument('--batch_size', type=int, default=100, metavar='N',
+                    help='batch size (default: 100)')
 
 args = parser.parse_args()
 
@@ -119,7 +121,7 @@ def createDataloader(batch_size:int, dataset):
                                                    )
     return train_dataloader
 
-batch_size = 100
+batch_size = args.batch_size # default: 100
 train_dataloader = createDataloader(batch_size, train_dataset)
 
 """ check reproducibility
