@@ -10,6 +10,9 @@ outputs/
 # model
 1droplet/model/
 
+# checkpoint
+.ipynb_checkpoints/
+
 # cache
 *.pyc
 __pycache__/
@@ -18,3 +21,4 @@ __pycache__/
 1droplet/230724
 2droplets/230927
 5droplets/230928
+10droplets/231030
