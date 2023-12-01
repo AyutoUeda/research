@@ -9,18 +9,20 @@ class DataProcessing:
     n_nearest_neighbors: 近傍点の数(int)
     
     return:
-        labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る
+        labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る, 0~11, 12は停止
             [基準からの角度1, 基準からの角度2, ...]
         data_d_and_angle: 各時刻におけるtargetとの距離と角度(numpy.array) 
             [基準からの距離1, 基準からの角度1, 基準からの距離2, 基準からの角度2, ...]
     """
     def __init__(self, input_data, n_nearest_neighbors): 
         self.input_data = input_data[1:] # ベクトルの計算のために1つずらす
-        self.vecotrs = np.diff(input_data, axis=0)
-        self.n_nearest_neighbors = n_nearest_neighbors
+        self.vectors = np.diff(input_data, axis=0)
+        self.n_nearest_neighbors = n_nearest_neighbors # 近傍点の数
         
     def __call__(self):
         self.labels, self.data_d_and_angle = self.data_create()
+        
+        return self.labels, self.data_d_and_angle
         
     def data_create(self):
         """
@@ -36,21 +38,38 @@ class DataProcessing:
             x_target = temp_coordinate[0] # # i秒目におけるtargetのx座標
             y_target = temp_coordinate[1] # # i秒目におけるtargetのy座標
 
-            vectors = self.vectors[i] # <-- 次の時刻との差
+            vector = self.vectors[i] # <-- 次の時刻との差
+            
+            target_vector_x = vector[0]
+            target_vector_y = vector[1]
+            
+            if target_vector_x == 0 and target_vector_y == 0: # 基準が停止しているとき
+                label = 13
+            else:
+                # 基準が次の時刻にどの方向に進むか
+                if target_vector_y == 0 and target_vector_x > 0:
+                    target_vector = 0
+                elif target_vector_x == 0 and target_vector_y > 0:
+                    target_vector = 90
+                elif target_vector_y == 0 and target_vector_x < 0:
+                    target_vector = 180
+                elif target_vector_x == 0 and target_vector_y < 0:
+                    target_vector = 270
+                else:
+                    target_vector = np.arctan(vector[1] / vector[0]) * 180 / np.pi
 
-            target_vector = np.arctan(vectors[1] / vectors[0]) * 180 / np.pi
-
-            # 360度に変換
-            if target_vector < 0:
-                target_vector = x - 360 * math.floor(target_vector/360)
-
-            label = target_vector // 30
+                # target_vectorがマイナスの値を取ったとき、360度以内に変換
+                if target_vector < 0:
+                    target_vector = target_vector - 360 * math.floor(target_vector/360)
+                
+                # 30度ごとにラベルを振る
+                label = target_vector // 30
 
             labels.append(label)
 
             temp_list = []
             # 各点とtargetを比較
-            for j in range(2,temp_coordinate.shape[1], 2):
+            for j in range(2,temp_coordinate.shape[0], 2):
                 # 基準となる座標と比べる座標の差
                 x_diff = x_target - temp_coordinate[j]
                 y_diff = y_target - temp_coordinate[j+1]
@@ -97,5 +116,8 @@ if __name__ == "__main__":
     input_data = df.values
     
     data_processing = DataProcessing(input_data, n_nearest_neighbors=3)
+    labels, data_d_and_angle = data_processing()
     
     length = len(data_processing)
+    
+    print(length)
