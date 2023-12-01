@@ -4,7 +4,7 @@ import numpy as np
 import math
 
 class DataProcessing:
-    """入力されたデータを基準からの距離と角度に変換するクラス
+    """入力されたデータを基準(target)からの距離と角度に変換するクラス
     input_data: 入力データ(numpy.array)
     n_nearest_neighbors: 近傍点の数(int)
     
@@ -35,12 +35,13 @@ class DataProcessing:
 
         for i in range(len(self.input_data) - 1):
             temp_coordinate = self.input_data[i] # i秒目における各点の座標
-            x_target = temp_coordinate[0] # # i秒目におけるtargetのx座標
-            y_target = temp_coordinate[1] # # i秒目におけるtargetのy座標
+            x_target = temp_coordinate[0] # # i秒目における基準(target)のx座標
+            y_target = temp_coordinate[1] # # i秒目における基準(target)のy座標
 
             vector = self.vectors[i] # <-- 次の時刻との差
             
-            target_vector_x = vector[0]
+            # 基準が次の時刻にどの方向に進むか
+            target_vector_x = vector[0] 
             target_vector_y = vector[1]
             
             if target_vector_x == 0 and target_vector_y == 0: # 基準が停止しているとき
@@ -73,15 +74,27 @@ class DataProcessing:
                 # 基準となる座標と比べる座標の差
                 x_diff = x_target - temp_coordinate[j]
                 y_diff = y_target - temp_coordinate[j+1]
-
-                tan = y_diff / x_diff
                 
                 # 基準との距離
                 d = math.sqrt(x_diff ** 2 + y_diff ** 2)
                 temp_list.append(d)
-
-                # 基準から見た角度
-                atan = np.arctan(tan) * 180 / np.pi
+                
+                # 基準との角度
+                if x_diff == 0 and y_diff < 0: # 比べる座標が基準より下にあるとき
+                    atan = 90
+                elif x_diff == 0 and y_diff > 0: # 比べる座標が基準より上にあるとき
+                    atan = 270
+                elif y_diff == 0 and x_diff < 0: # 比べる座標が基準より右にあるとき
+                    atan = 0
+                elif y_diff == 0 and x_diff > 0: # 比べる座標が基準より左にあるとき
+                    atan = 180
+                else:
+                    tan = y_diff / x_diff
+                    
+                    # 基準から見た角度
+                    atan = np.arctan(tan) * 180 / np.pi
+                
+                # 基準からみた角度を追加
                 temp_list.append(atan)
                 
             
