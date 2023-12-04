@@ -12,7 +12,8 @@ class DataProcessing:
         labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る, 0~11, 12は停止
             [基準からの角度1, 基準からの角度2, ...]
         data_d_and_angle: 各時刻におけるtargetとの距離と角度(numpy.array) 
-            [基準からの距離1, 基準からの角度1, 基準からの距離2, 基準からの角度2, ...]
+            [[基準からの距離1, 基準からの角度1, neighboor1の速度ベクトルx, neighboor1の速度ベクトルy, 
+            基準からの距離2, 基準からの角度2, neighboor2の速度ベクトルx, neighboor2の速度ベクトルy,...], ...]
     """
     def __init__(self, input_data, n_nearest_neighbors): 
         self.input_data = input_data[1:] # ベクトルの計算のために1つずらす
@@ -40,12 +41,12 @@ class DataProcessing:
 
             vector = self.vectors[i] # <-- 次の時刻との差
             
-            # 基準が次の時刻にどの方向に進むか
+            # =====基準が次の時刻にどの方向に進むか=====
             target_vector_x = vector[0] 
             target_vector_y = vector[1]
             
             if target_vector_x == 0 and target_vector_y == 0: # 基準が停止しているとき
-                label = 13
+                label = 12
             else:
                 # 基準が次の時刻にどの方向に進むか
                 if target_vector_y == 0 and target_vector_x > 0:
@@ -68,8 +69,8 @@ class DataProcessing:
 
             labels.append(label)
 
+            # =====各点とtargetを比較=====
             temp_list = []
-            # 各点とtargetを比較
             for j in range(2,temp_coordinate.shape[0], 2):
                 # 基準となる座標と比べる座標の差
                 x_diff = x_target - temp_coordinate[j]
@@ -97,22 +98,28 @@ class DataProcessing:
                 # 基準からみた角度を追加
                 temp_list.append(atan)
                 
+                # nearest neighboorsが次の時刻にどの方向に進むか（速度ベクトル）
+                temp_list.append(vector[j])
+                temp_list.append(vector[j+1])
+                
             
             # 基準から近い点をn_nearest個取得
             temp_list = np.array(temp_list)
-            min_indices = np.argsort(temp_list[::2])[:self.n_nearest_neighbors]
+            min_indices = np.argsort(temp_list[::4])[:self.n_nearest_neighbors]
             
             temp_data = []
             for j in min_indices:
                 temp_data.append(temp_list[2*j]) # 基準からの距離
                 temp_data.append(temp_list[2*j+1]) # 基準からの角度
+                temp_data.append(temp_list[2*j+2]) # nearest neighboorsの速度ベクトル x成分
+                temp_data.append(temp_list[2*j+3]) # nearest neighboorsの速度ベクトル y成分
 
             data_d_and_angle.append(temp_data)
         
         return np.array(labels), np.array(data_d_and_angle)
         
     def __len__(self):
-        return len(self.data_d_and_angle)
+        return len(self.data_d_and_angle) # データ数
     
 if __name__ == "__main__":
     print("DataProcessing")
