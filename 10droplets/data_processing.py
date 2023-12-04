@@ -7,18 +7,20 @@ class DataProcessing:
     """入力されたデータを基準(target)からの距離と角度に変換するクラス
     input_data: 入力データ(numpy.array)
     n_nearest_neighbors: 近傍点の数(int)
+    split_angle: ラベルを振る角度の間隔(int)
     
     return:
         labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る, 0~11, 12は停止
             [基準からの角度1, 基準からの角度2, ...]
         data_d_and_angle: 各時刻におけるtargetとの距離と角度(numpy.array) 
-            [[基準からの距離1, 基準からの角度1, neighboor1の速度ベクトルx, neighboor1の速度ベクトルy, 
-            基準からの距離2, 基準からの角度2, neighboor2の速度ベクトルx, neighboor2の速度ベクトルy,...], ...]
+            [[基準からの距離1, 基準からの角度1, neighbor1の速度ベクトルx, neighbor1の速度ベクトルy, 
+            基準からの距離2, 基準からの角度2, neighbor2の速度ベクトルx, neighbor2の速度ベクトルy,...], ...]
     """
-    def __init__(self, input_data, n_nearest_neighbors): 
+    def __init__(self, input_data, n_nearest_neighbors, split_angle=30): 
         self.input_data = input_data[1:] # ベクトルの計算のために1つずらす
-        self.vectors = np.diff(input_data, axis=0)
+        self.vectors = np.diff(input_data, axis=0) # 次の時刻との差（速度ベクトル）
         self.n_nearest_neighbors = n_nearest_neighbors # 近傍点の数
+        self.split_angle = split_angle # ラベルを振る角度の間隔(default: 30度)
         
     def __call__(self):
         self.labels, self.data_d_and_angle = self.data_create()
@@ -46,7 +48,7 @@ class DataProcessing:
             target_vector_y = vector[1]
             
             if target_vector_x == 0 and target_vector_y == 0: # 基準が停止しているとき
-                label = 12
+                label = 360 // self.split_angle 
             else:
                 # 基準が次の時刻にどの方向に進むか
                 if target_vector_y == 0 and target_vector_x > 0:
@@ -64,8 +66,8 @@ class DataProcessing:
                 if target_vector < 0:
                     target_vector = target_vector - 360 * math.floor(target_vector/360)
                 
-                # 30度ごとにラベルを振る
-                label = target_vector // 30
+                # split_angle度ごとにラベルを振る
+                label = target_vector // self.split_angle
 
             labels.append(label)
 
@@ -112,10 +114,10 @@ class DataProcessing:
             
             temp_data = []
             for j in min_indices:
-                temp_data.append(temp_list[2*j]) # 基準からの距離
-                temp_data.append(temp_list[2*j+1]) # 基準からの角度
-                temp_data.append(temp_list[2*j+2]) # nearest neighboorsの速度ベクトル x成分
-                temp_data.append(temp_list[2*j+3]) # nearest neighboorsの速度ベクトル y成分
+                temp_data.append(temp_list[4*j]) # 基準からの距離
+                temp_data.append(temp_list[4*j+1]) # 基準からの角度
+                temp_data.append(temp_list[4*j+2]) # nearest neighboorsの速度ベクトル x成分
+                temp_data.append(temp_list[4*j+3]) # nearest neighboorsの速度ベクトル y成分
 
             data_d_and_angle.append(temp_data)
         
