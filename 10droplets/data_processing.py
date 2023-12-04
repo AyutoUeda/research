@@ -12,7 +12,7 @@ class DataProcessing:
     return:
         labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る, 0~11, 12は停止
             [基準からの角度1, 基準からの角度2, ...]
-        data_d_and_angle: 各時刻におけるtargetとの距離と角度(numpy.array) 
+        data_d_and_angle: 各時刻における基準と比べる座標との距離・角度(numpy.array)、比較対象がどの方向に進んでいるか 
             [[基準からの距離1, 基準からの角度1, neighbor1の速度ベクトルx, neighbor1の速度ベクトルy, 
             基準からの距離2, 基準からの角度2, neighbor2の速度ベクトルx, neighbor2の速度ベクトルy,...], ...]
     """
@@ -60,11 +60,15 @@ class DataProcessing:
                 elif target_vector_x == 0 and target_vector_y < 0:
                     target_vector = 270
                 else:
-                    target_vector = np.arctan(vector[1] / vector[0]) * 180 / np.pi
+                    target_vector = np.arctan(target_vector_y / target_vector_x) * 180 / np.pi
 
                 # target_vectorがマイナスの値を取ったとき、360度以内に変換
                 if target_vector < 0:
-                    target_vector = target_vector - 360 * math.floor(target_vector/360)
+                    target_vector = target_vector - 180 * math.floor(target_vector/360)
+                
+                # 基準が下方向に進んだとき
+                if target_vector_y < 0:
+                    target_vector += 180
                 
                 # split_angle度ごとにラベルを振る
                 label = target_vector // self.split_angle
@@ -98,7 +102,11 @@ class DataProcessing:
                     atan = np.arctan(tan) * 180 / np.pi
                     # atan がマイナスの値を取ったとき、360度以内に変換
                     if atan < 0:
-                        atan = atan - 360 * math.floor(atan/360)
+                        atan = atan - 180 * math.floor(atan/360)
+                        
+                    # 比べる座標が基準より下にある場合
+                    if y_diff > 0:
+                        atan = atan + 180
                 
                 # 基準からみた角度を追加
                 temp_list.append(atan)
@@ -139,10 +147,12 @@ if __name__ == "__main__":
     df = mk_dataframe(data_path)
     
     input_data = df.values
-    
-    data_processing = DataProcessing(input_data, n_nearest_neighbors=3)
+    print(np.diff(input_data, axis=0)[0])
+    data_processing = DataProcessing(input_data, n_nearest_neighbors=9)
     labels, data_d_and_angle = data_processing()
     
-    length = len(data_processing)
+    print(data_d_and_angle[0])
     
+    length = len(data_processing)
+    print(labels)
     print(length)
