@@ -94,6 +94,9 @@ class DataProcessing:
                     
                     # 基準から見た角度
                     atan = np.arctan(tan) * 180 / np.pi
+                    # atan がマイナスの値を取ったとき、360度以内に変換
+                    if atan < 0:
+                        atan = atan - 360 * math.floor(atan/360)
                 
                 # 基準からみた角度を追加
                 temp_list.append(atan)
