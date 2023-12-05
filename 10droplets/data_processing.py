@@ -16,10 +16,11 @@ class DataProcessing:
             [[基準からの距離1, 基準からの角度1, neighbor1の速度ベクトルx, neighbor1の速度ベクトルy, 
             基準からの距離2, 基準からの角度2, neighbor2の速度ベクトルx, neighbor2の速度ベクトルy,...], ...]
     """
-    def __init__(self, input_data, n_nearest_neighbors, split_angle=30): 
+    def __init__(self, input_data, n_nearest_neighbors, target_no=0, split_angle=30): 
         self.input_data = input_data[1:] # ベクトルの計算のために1つずらす
         self.vectors = np.diff(input_data, axis=0) # 次の時刻との差（速度ベクトル）
         self.n_nearest_neighbors = n_nearest_neighbors # 近傍点の数
+        self.target_no = target_no # 基準となる点の番号(default: 0)
         self.split_angle = split_angle # ラベルを振る角度の間隔(default: 30度)
         
     def __call__(self):
@@ -38,14 +39,14 @@ class DataProcessing:
 
         for i in range(len(self.input_data) - 1):
             temp_coordinate = self.input_data[i] # i秒目における各点の座標
-            x_target = temp_coordinate[0] # # i秒目における基準(target)のx座標
-            y_target = temp_coordinate[1] # # i秒目における基準(target)のy座標
+            x_target = temp_coordinate[self.target_no*2] # # i秒目における基準(target)のx座標
+            y_target = temp_coordinate[self.target_no*2+1] # # i秒目における基準(target)のy座標
 
             vector = self.vectors[i] # <-- 次の時刻との差
             
             # =====基準が次の時刻にどの方向に進むか=====
-            target_vector_x = vector[0] 
-            target_vector_y = vector[1]
+            target_vector_x = vector[self.target_no*2] 
+            target_vector_y = vector[self.target_no*2+1]
             
             if target_vector_x == 0 and target_vector_y == 0: # 基準が停止しているとき
                 label = 360 // self.split_angle 
@@ -77,57 +78,60 @@ class DataProcessing:
 
             # =====各点とtargetを比較=====
             temp_list = []
-            for j in range(2,temp_coordinate.shape[0], 2):
-                # 基準となる座標と比べる座標の差
-                x_diff = x_target - temp_coordinate[j]
-                y_diff = y_target - temp_coordinate[j+1]
-                
-                # 基準との距離
-                d = math.sqrt(x_diff ** 2 + y_diff ** 2)
-                temp_list.append(d)
-                
-                # 基準との角度
-                if x_diff == 0 and y_diff < 0: # 比べる座標が基準より下にあるとき
-                    atan = 90
-                elif x_diff == 0 and y_diff > 0: # 比べる座標が基準より上にあるとき
-                    atan = 270
-                elif y_diff == 0 and x_diff < 0: # 比べる座標が基準より右にあるとき
-                    atan = 0
-                elif y_diff == 0 and x_diff > 0: # 比べる座標が基準より左にあるとき
-                    atan = 180
+            for j in range(0,temp_coordinate.shape[0], 2):
+                if j == self.target_no: # 基準は除く
+                    continue
                 else:
-                    tan = y_diff / x_diff
+                    # 基準となる座標と比べる座標の差
+                    x_diff = x_target - temp_coordinate[j]
+                    y_diff = y_target - temp_coordinate[j+1]
                     
-                    # 基準から見た角度
-                    atan = np.arctan(tan) * 180 / np.pi
-                    # atan がマイナスの値を取ったとき、360度以内に変換
-                    if atan < 0:
-                        atan = atan - 180 * math.floor(atan/360)
+                    # 基準との距離
+                    d = math.sqrt(x_diff ** 2 + y_diff ** 2)
+                    temp_list.append(d)
+                
+                    # 基準との角度
+                    if x_diff == 0 and y_diff < 0: # 比べる座標が基準より下にあるとき
+                        atan = 90
+                    elif x_diff == 0 and y_diff > 0: # 比べる座標が基準より上にあるとき
+                        atan = 270
+                    elif y_diff == 0 and x_diff < 0: # 比べる座標が基準より右にあるとき
+                        atan = 0
+                    elif y_diff == 0 and x_diff > 0: # 比べる座標が基準より左にあるとき
+                        atan = 180
+                    else:
+                        tan = y_diff / x_diff
                         
-                    # 比べる座標が基準より下にある場合
-                    if y_diff > 0:
-                        atan = atan + 180
+                        # 基準から見た角度
+                        atan = np.arctan(tan) * 180 / np.pi
+                        # atan がマイナスの値を取ったとき、360度以内に変換
+                        if atan < 0:
+                            atan = atan - 180 * math.floor(atan/360)
+                            
+                        # 比べる座標が基準より下にある場合
+                        if y_diff > 0:
+                            atan = atan + 180
                 
-                # 基準からみた角度を追加
-                temp_list.append(atan)
-                
-                # nearest neighboorsが次の時刻にどの方向に進むか（速度ベクトル）
-                temp_list.append(vector[j])
-                temp_list.append(vector[j+1])
+                    # 基準からみた角度を追加
+                    temp_list.append(atan)
+                    
+                    # nearest neighboorsが次の時刻にどの方向に進むか（速度ベクトル）
+                    temp_list.append(vector[j])
+                    temp_list.append(vector[j+1])
                 
             
-            # 基準から近い点をn_nearest個取得
-            temp_list = np.array(temp_list)
-            min_indices = np.argsort(temp_list[::4])[:self.n_nearest_neighbors]
-            
-            temp_data = []
-            for j in min_indices:
-                temp_data.append(temp_list[4*j]) # 基準からの距離
-                temp_data.append(temp_list[4*j+1]) # 基準からの角度
-                temp_data.append(temp_list[4*j+2]) # nearest neighboorsの速度ベクトル x成分
-                temp_data.append(temp_list[4*j+3]) # nearest neighboorsの速度ベクトル y成分
+                # 基準から近い点をn_nearest個取得
+                temp_list = np.array(temp_list)
+                min_indices = np.argsort(temp_list[::4])[:self.n_nearest_neighbors] # 基準からの距離でソートし、n_nearest_neighbors個取得
+                
+                temp_data = []
+                for j in min_indices:
+                    temp_data.append(temp_list[4*j]) # 基準からの距離
+                    temp_data.append(temp_list[4*j+1]) # 基準からの角度
+                    temp_data.append(temp_list[4*j+2]) # nearest neighboorsの速度ベクトル x成分
+                    temp_data.append(temp_list[4*j+3]) # nearest neighboorsの速度ベクトル y成分
 
-            data_d_and_angle.append(temp_data)
+                data_d_and_angle.append(temp_data)
         
         return np.array(labels), np.array(data_d_and_angle)
         
