@@ -1,21 +1,30 @@
-from typing import Any
 import pandas as pd
 import numpy as np
 import math
 
 class DataProcessing:
     """入力されたデータを基準(target)からの距離と角度に変換するクラス
-    input_data: 入力データ(numpy.array)
-    n_nearest_neighbors: 近傍点の数(int)
-    target_no: 基準となる点の番号(int) # 0から始まる
-    split_angle: ラベルを振る角度の間隔(int)
     
-    return:
+    Args:
+        input_data: 入力データ(numpy.array)
+        n_nearest_neighbors: 近傍点の数(int)
+        target_no: 基準となる点の番号(int) # 0から始まる
+        split_angle: ラベルを振る角度の間隔(int)
+    
+    Returns:
         labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る, 0~11, 12は停止
             [基準からの角度1, 基準からの角度2, ...]
         data_d_and_angle: 各時刻における基準と比べる座標との距離・角度(numpy.array)、比較対象がどの方向に進んでいるか 
             [[基準からの距離1, 基準からの角度1, neighbor1の速度ベクトルx, neighbor1の速度ベクトルy, 
             基準からの距離2, 基準からの角度2, neighbor2の速度ベクトルx, neighbor2の速度ベクトルy,...], ...]
+    
+    Example:
+        input_data = [[x1, y1, x2, y2, x3, y3, ...], [x1, y1, x2, y2, x3, y3, ...], ...]
+        data_processing = DataProcessing(input_data, target_no=0, n_nearest_neighbors=9)
+        labels, data_d_and_angle = data_processing()
+        
+    Note:
+        基準となる点の番号(target_no)は0から始まる
     """
     def __init__(self, input_data, n_nearest_neighbors, target_no=0, split_angle=30): 
         self.input_data = input_data[:-1] # ベクトルの計算のために1つずらす
