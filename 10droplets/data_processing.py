@@ -77,9 +77,9 @@ class DataProcessing:
             labels.append(label)
 
             # =====各点とtargetを比較=====
-            temp_list = []
+            temp_list = [] # 基準と各点との比較を格納するリスト
             for j in range(0,temp_coordinate.shape[0], 2):
-                if j == self.target_no: # 基準は除く
+                if j == self.target_no * 2: # 基準は除く
                     continue
                 else:
                     # 基準となる座標と比べる座標の差
@@ -88,6 +88,7 @@ class DataProcessing:
                     
                     # 基準との距離
                     d = math.sqrt(x_diff ** 2 + y_diff ** 2)
+                    
                     temp_list.append(d)
                 
                     # 基準との角度
@@ -120,18 +121,18 @@ class DataProcessing:
                     temp_list.append(vector[j+1])
                 
             
-                # 基準から近い点をn_nearest個取得
-                temp_list = np.array(temp_list)
-                min_indices = np.argsort(temp_list[::4])[:self.n_nearest_neighbors] # 基準からの距離でソートし、n_nearest_neighbors個取得
-                
-                temp_data = []
-                for j in min_indices:
-                    temp_data.append(temp_list[4*j]) # 基準からの距離
-                    temp_data.append(temp_list[4*j+1]) # 基準からの角度
-                    temp_data.append(temp_list[4*j+2]) # nearest neighboorsの速度ベクトル x成分
-                    temp_data.append(temp_list[4*j+3]) # nearest neighboorsの速度ベクトル y成分
+            # 基準から近い点をn_nearest個取得
+            temp_array = np.array(temp_list) # numpy配列に変換
+            min_indices = np.argsort(temp_array[::4])[:self.n_nearest_neighbors] # 基準からの距離でソートし、n_nearest_neighbors個取得
+            
+            temp_data = []
+            for j in min_indices:
+                temp_data.append(temp_array[4*j]) # 基準からの距離
+                temp_data.append(temp_array[4*j+1]) # 基準からの角度
+                temp_data.append(temp_array[4*j+2]) # nearest neighboorsの速度ベクトル x成分
+                temp_data.append(temp_array[4*j+3]) # nearest neighboorsの速度ベクトル y成分
 
-                data_d_and_angle.append(temp_data)
+            data_d_and_angle.append(temp_data)
         
         return np.array(labels), np.array(data_d_and_angle)
         
@@ -152,7 +153,7 @@ if __name__ == "__main__":
     
     input_data = df.values
     print(np.diff(input_data, axis=0)[0])
-    data_processing = DataProcessing(input_data, n_nearest_neighbors=9)
+    data_processing = DataProcessing(input_data, target_no=0,n_nearest_neighbors=9)
     labels, data_d_and_angle = data_processing()
     
     print(data_d_and_angle[0])
