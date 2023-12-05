@@ -7,6 +7,7 @@ class DataProcessing:
     """入力されたデータを基準(target)からの距離と角度に変換するクラス
     input_data: 入力データ(numpy.array)
     n_nearest_neighbors: 近傍点の数(int)
+    target_no: 基準となる点の番号(int) # 0から始まる
     split_angle: ラベルを振る角度の間隔(int)
     
     return:
@@ -17,7 +18,7 @@ class DataProcessing:
             基準からの距離2, 基準からの角度2, neighbor2の速度ベクトルx, neighbor2の速度ベクトルy,...], ...]
     """
     def __init__(self, input_data, n_nearest_neighbors, target_no=0, split_angle=30): 
-        self.input_data = input_data[1:] # ベクトルの計算のために1つずらす
+        self.input_data = input_data[:-1] # ベクトルの計算のために1つずらす
         self.vectors = np.diff(input_data, axis=0) # 次の時刻との差（速度ベクトル）
         self.n_nearest_neighbors = n_nearest_neighbors # 近傍点の数
         self.target_no = target_no # 基準となる点の番号(default: 0)
