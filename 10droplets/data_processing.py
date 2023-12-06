@@ -73,13 +73,13 @@ class DataProcessing:
                 else:
                     target_vector = np.arctan(target_vector_y / target_vector_x) * 180 / np.pi
 
-                # target_vectorがマイナスの値を取ったとき、360度以内に変換
-                if target_vector < 0:
-                    target_vector = target_vector - 180 * math.floor(target_vector/360)
-                
-                # 基準が下方向に進んだとき
-                if target_vector_y < 0:
-                    target_vector += 180
+                    # target_vectorがマイナスの値を取ったとき、360度以内に変換
+                    if target_vector < 0:
+                        target_vector = target_vector - 180 * math.floor(target_vector/360)
+                    
+                    # 基準が下方向に進んだとき
+                    if target_vector_y < 0:
+                        target_vector += 180
                 
                 # split_angle度ごとにラベルを振る
                 label = target_vector // self.split_angle
