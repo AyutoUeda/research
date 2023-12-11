@@ -270,7 +270,7 @@ def plot_gen(gen: np.ndarray, save: bool=False) -> str:
 
 pred_path = plot_gen(gen, save=False)
 
-"""
+
 # =====model save and log========
 print("model save")
 
@@ -300,4 +300,4 @@ with open('new_model_log_oscillated.csv','a') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
     # writer.writeheader()
     writer.writerows(save_output)
-"""
+
