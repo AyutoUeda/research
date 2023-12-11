@@ -4,6 +4,7 @@ import torch.optim as optim
 
 class TrainEval:
     """ Train and evaluate a model
+    trainとevaluateを同時に実行するメソッドを持つクラス
     
     Note:
         Do not include `self` param in ``Args`` section.
@@ -39,10 +40,10 @@ class TrainEval:
             self.model.train()
             train_loss = 0.0
 
-            for x, t in self.train_loader:
+            for x, target in self.train_loader:
                 self.optimizer.zero_grad() 
                 outputs = self.model(x) # prediction
-                loss = self.criterion(outputs, t) # compare prediction and correct data
+                loss = self.criterion(outputs, target) # compare prediction and correct data
                 loss.backward()
                 self.optimizer.step()
                 train_loss += loss.item()
@@ -57,27 +58,22 @@ class TrainEval:
             self.loss['val'].append(val_loss)
             
             if epoch == 0 or (epoch+1) % 20 == 0:
-                print("[{}/{}] \t Train Loss: {:.4f} \t Validation Loss: {:.4f} \t Validation Accuracy: {:.4f}"
-                    .format(epoch+1, num_epochs, train_loss, val_loss, val_accuracy))
+                print("[{}/{}] \t Train Loss: {:.4f} \t Validation Loss: {:.4f}"
+                    .format(epoch+1, num_epochs, train_loss, val_loss))
         
         return self.loss
     
     def evaluate(self):
         self.model.eval()
         val_loss = 0.0
-        correct = 0
-        total = 0
 
         with torch.no_grad():
             for inputs, targets in self.val_loader:
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
                 val_loss += loss.item()
-                _, predicted = torch.max(outputs.data, 1)
-                total += targets.size(0)
-                correct += (predicted == targets).sum().item()
 
         val_loss /= len(self.val_loader)
-        val_accuracy = correct / total
+  
         
-        return val_loss, val_accuracy
+        return val_loss
