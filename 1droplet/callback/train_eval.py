@@ -51,19 +51,19 @@ class TrainEval:
             train_loss /= len(self.train_loader) # バッチサイズごとのロスの平均
             
             # validation
-            val_loss, val_accuracy = self.evaluate()
+            val_loss = self.evaluate()
             
             # lossを格納
             self.loss['train'].append(train_loss)
             self.loss['val'].append(val_loss)
             
             if epoch == 0 or (epoch+1) % 20 == 0:
-                print("[{}/{}] \t Train Loss: {:.4f} \t Validation Loss: {:.4f}"
+                print("[{}/{}] \t Train Loss: {:.5f} \t Validation Loss: {:.5f}"
                     .format(epoch+1, num_epochs, train_loss, val_loss))
         
         return self.loss
     
-    def evaluate(self):
+    def evaluate(self) -> float:
         self.model.eval()
         val_loss = 0.0
 
@@ -74,6 +74,5 @@ class TrainEval:
                 val_loss += loss.item()
 
         val_loss /= len(self.val_loader)
-  
         
         return val_loss
