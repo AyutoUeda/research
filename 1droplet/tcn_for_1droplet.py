@@ -18,6 +18,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from callback import tcn
 from callback import earlystopping
+from callback.train_eval import TrainEval
 
 import argparse
 
@@ -26,6 +27,8 @@ parser.add_argument('--epochs', type=int, default=5, metavar='N',
                     help='epochs (default: 5)')
 parser.add_argument('--batch_size', type=int, default=100, metavar='N',
                     help='batch size (default: 100)')
+parser.add_argument('--time_step', type=int, default=300, metavar='N',
+                    help='time step (default: 300)')
 
 args = parser.parse_args()
 
@@ -75,7 +78,7 @@ scaler = MinMaxScaler(feature_range = (0, 1))
 pos_by1s_scaled = scaler.fit_transform(pos_by1sec)
 
 # time step
-time_step = 300
+time_step = args.time_step # default: 300
 
 len_seq = len(pos_by1s_scaled)
 data_size = len_seq - time_step
@@ -123,24 +126,9 @@ def createDataloader(batch_size:int, dataset):
 
 batch_size = args.batch_size # default: 100
 train_dataloader = createDataloader(batch_size, train_dataset)
+test_dataloader = createDataloader(test_size, test_dataset)
 
-""" check reproducibility
-for i, (x,t) in enumerate(train_dataloader):
-    print(x)
-    print(t)
-    
-    if i == 1:
-        break
 
-debag = ok
-[1]
-0.7542, 0.7518, 0.7512,  ..., 0.7702, 0.7681, 0.7664
-
-[2]
-0.2995, 0.2994, 0.2972,  ..., 0.4175, 0.4165, 0.4156
-
-0.3641, 0.3638, 0.3614,  ..., 0.5012, 0.5006, 0.5012
-"""
 
 # =====train and evaluate func=====
 def train_model(model, optimizer, batch_size: int=0, clip=-1):
@@ -200,88 +188,63 @@ kernel_size = 5
 
 model = tcn.myTCN(input_size=2, output_size=2, num_channels=[h_dim]*level, kernel_size=kernel_size, dropout=0.0)
 optimizer = getattr(optim, 'Adam')(model.parameters(), lr=lr)
+criterion = nn.MSELoss()
 
-# =====train=====
-loss = {"val_loss":[], "train_loss":[]}
 es = earlystopping.EarlyStopping(patience=5, verbose=1)
 
-for epoch in range(1, epochs + 1):
-    train_loss = train_model(model, optimizer, clip=-1)
-    tloss = evaluate(model, epoch, train_loss)
-    
-    loss["train_loss"].append(train_loss)
-    loss["val_loss"].append(tloss)
+# =====train=====
+train_eval = TrainEval(
+    model, train_dataloader, test_dataloader, criterion=criterion, optimizer=optimizer, clip=-1
+    )
+loss_dict = train_eval.train(epochs)
 
-"""check reproducibility ==> ok
-[epoch: 1] Train loss: 0.125471         Test set: Average loss: 0.156144
-
-
-[epoch: 5] Train loss: 0.002935         Test set: Average loss: 0.017688
-
-
-[epoch: 10] Train loss: 0.000454        Test set: Average loss: 0.005820
-
-
-[epoch: 15] Train loss: 0.000072        Test set: Average loss: 0.004358
-
-
-[epoch: 20] Train loss: 0.000051        Test set: Average loss: 0.003631
-
-
-epoch 30
-[epoch: 1] Train loss: 0.125471         Test set: Average loss: 0.156144
-
-
-[epoch: 5] Train loss: 0.002935         Test set: Average loss: 0.017688
-
-
-[epoch: 10] Train loss: 0.000454        Test set: Average loss: 0.005820
-
-
-[epoch: 15] Train loss: 0.000072        Test set: Average loss: 0.004358
-
-
-[epoch: 20] Train loss: 0.000051        Test set: Average loss: 0.003631
-
-
-[epoch: 25] Train loss: 0.000048        Test set: Average loss: 0.003686
-
-
-[epoch: 30] Train loss: 0.000054        Test set: Average loss: 0.003820
-"""
 
 # =====plot loss=====
-plt.rcParams['font.family'] ='sans-serif'#使用するフォント
-plt.rcParams['xtick.direction'] = 'in'#x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
-plt.rcParams['ytick.direction'] = 'in'#y軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
-plt.rcParams['xtick.major.width'] = 1.0#x軸主目盛り線の線幅
-plt.rcParams['ytick.major.width'] = 1.0#y軸主目盛り線の線幅
-plt.rcParams['font.size'] = 8 #フォントの大きさ
-plt.rcParams['axes.linewidth'] = 1.0# 軸の線幅edge linewidth。囲みの太さ
+def plot_loss(loss_dict: dict, save: bool=False) -> str:
+    """plot loss
+    
+    Args:
+        loss_dict (dict): lossを格納したdict(train, valの2つのkeyを持つ)
+        save (bool, optional): saveするかどうか. Default: False.
+    
+    Returns:
+        loss_path (str): lossのplotを保存したpath
+    """
+    plt.rcParams['font.family'] ='sans-serif'#使用するフォント
+    plt.rcParams['xtick.direction'] = 'in'#x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
+    plt.rcParams['ytick.direction'] = 'in'#y軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
+    plt.rcParams['xtick.major.width'] = 1.0#x軸主目盛り線の線幅
+    plt.rcParams['ytick.major.width'] = 1.0#y軸主目盛り線の線幅
+    plt.rcParams['font.size'] = 8 #フォントの大きさ
+    plt.rcParams['axes.linewidth'] = 1.0# 軸の線幅edge linewidth。囲みの太さ
 
-plt.xticks(np.arange(1, len(loss["val_loss"])+1, 2))
-plt.xlim(0, len(loss["val_loss"]))
-plt.ylim(0, max(loss["val_loss"]))
+    plt.xlim(0, len(loss_dict["val"]))
+    plt.ylim(0, max(loss_dict["val"]))
 
-plt.xlabel("epoch", fontsize=12)
-plt.ylabel("loss", fontsize=12)
+    plt.xlabel("epoch", fontsize=12)
+    plt.ylabel("loss", fontsize=12)
 
-plt.plot(loss["train_loss"], label="train loss")
-plt.plot(loss["val_loss"], label="val loss")
-plt.legend()
-plt.title("TCN \n batch:{}, t_step:{}, epoch:{} \n level:{}, h_dim:{}, k_size:{}, lr:{}".format(
-    batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
+    plt.plot(loss_dict["train"], label="train loss")
+    plt.plot(loss_dict["val"], label="val loss")
+    plt.legend()
+    
+    plt.title("TCN \n batch:{}, t_step:{}, epoch:{} \n level:{}, h_dim:{}, k_size:{}, lr:{}".format(
+        batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
 
-plt.tight_layout()
+    plt.tight_layout()
 
-loss_path = "outputs/oscillated_loss/tcnloss_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
-    batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
-plt.savefig(loss_path)
-plt.show()
+    loss_path = "outputs/oscillated_loss/tcnloss_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
+        batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
+    if save:
+        plt.savefig(loss_path)
+    plt.show()
+    
+    return loss_path
+    
+loss_path = plot_loss(loss_dict, save=False)
 
 
 # =====prediction=====
-
 def generate_pred(model, gen_time:int, z: torch.Tensor)-> list:
     gen = [[None, None] for i in range(time_step)]
     
@@ -302,40 +265,44 @@ def generate_pred(model, gen_time:int, z: torch.Tensor)-> list:
     return np.array(gen)
 
 gen_time = len(data) - time_step
-
 # input to predict
 z = torch.Tensor(data[0].reshape(1,2,-1))
-
-# generate prediction
 gen = generate_pred(model, gen_time, z)
 
-# plot
-plt.figure(figsize=(10,10))
-gen = np.array(gen)
-plt.plot(gen[:,0], gen[:,1], label="gen", linewidth=3)
-plt.scatter(gen[time_step,0], gen[time_step, 1], marker="x")
-# plt.scatter(gen[train_size,0], gen[train_size, 1], marker="x", s=100)
+
+# =====plot gen=====
+def plot_gen(gen: np.ndarray, save: bool=False) -> str:
+    plt.figure(figsize=(10,10))
+    plt.plot(gen[:,0], gen[:,1], label="gen", linewidth=3)
+    plt.scatter(gen[time_step,0], gen[time_step, 1], marker="x")
+    # plt.scatter(gen[train_size,0], gen[train_size, 1], marker="x", s=100)
 
 
-plot_train = X_train[:,:,0].numpy()
-plt.plot(plot_train[:,0], plot_train[:,1], label="train")
-# plt.plot(X_test[0,0], X_test[0,1], label="given")
-plt.plot(pos_by1s_scaled[:time_step,0], pos_by1s_scaled[:time_step,1], label="given")
-plt.plot(pos_by1s_scaled[:,0], pos_by1s_scaled[:,1], color="gray", alpha=0.3, label="val")
+    plot_train = X_train[:,:,0].numpy()
+    plt.plot(plot_train[:,0], plot_train[:,1], label="train")
+    # plt.plot(X_test[0,0], X_test[0,1], label="given")
+    plt.plot(pos_by1s_scaled[:time_step,0], pos_by1s_scaled[:time_step,1], label="given")
+    plt.plot(pos_by1s_scaled[:,0], pos_by1s_scaled[:,1], color="gray", alpha=0.3, label="val")
 
 
-# plt.title("TCN \n epoch:{} \n val loss:{:6f}".format(epochs, loss["val_loss"][-1]))
-plt.title("TCN \n val loss:{:6f} \n batch:{}, t_step:{}, epoch:{} \n level:{}, h_dim:{}, k_size:{}, lr:{}".format(
-    loss["val_loss"][-1], batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
-plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0)
+    # plt.title("TCN \n epoch:{} \n val loss:{:6f}".format(epochs, loss["val_loss"][-1]))
+    plt.title("TCN \n val loss:{:6f} \n batch:{}, t_step:{}, epoch:{} \n level:{}, h_dim:{}, k_size:{}, lr:{}".format(
+        loss_dict["val"][-1], batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
+    plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0)
 
-pred_path = "outputs/pred_oscillated/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
-    batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
+    pred_path = "outputs/pred_oscillated/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
+        batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
+    
+    if save:
+        plt.savefig(pred_path)
 
-plt.savefig(pred_path)
+    plt.show()
+    
+    return pred_path
 
-plt.show()
+pred_path = plot_gen(gen, save=False)
 
+"""
 # =====model save and log========
 print("model save")
 
@@ -353,7 +320,7 @@ save_output = [{
     "hidden dim": h_dim,
     "kernel size": kernel_size,
     "learning rate": lr,
-    "val loss": loss["val_loss"][-1],
+    "val loss": loss_dict["val"][-1],
     "model path": model_path,
     "loss path": loss_path,
     "pred_path": pred_path,
@@ -365,3 +332,4 @@ with open('new_model_log_oscillated.csv','a') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
     # writer.writeheader()
     writer.writerows(save_output)
+"""
