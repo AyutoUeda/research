@@ -27,6 +27,7 @@ from collections import OrderedDict
 import os
 import random
 import pandas as pd
+import csv
 
 import matplotlib.pyplot as plt
 
@@ -293,8 +294,6 @@ save_output = [{
     "loss path": loss_path,
     "pred_path": pred_path,
 }]
-
-import csv
 
 with open('new_model_log_oscillated.csv','a') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
