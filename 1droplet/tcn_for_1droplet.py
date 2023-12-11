@@ -1,3 +1,15 @@
+""" tcnを用いた運動予測
+Parse Args:
+    -h, --help: show this help message and exit
+    --epochs: epoch数
+    --batch_size: batch size
+    --time_step: time step
+    
+Example:
+    $ python3 tcn_for_1droplet.py --epochs 5 --batch_size 100 --time_step 300
+
+"""
+
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -128,56 +140,6 @@ batch_size = args.batch_size # default: 100
 train_dataloader = createDataloader(batch_size, train_dataset)
 test_dataloader = createDataloader(test_size, test_dataset)
 
-
-
-# =====train and evaluate func=====
-def train_model(model, optimizer, batch_size: int=0, clip=-1):
-    model.train()
-    batch_idx = 1 # バッチが何回カウントされたか
-    total_loss = 0
-    
-    for i, (x,t) in enumerate(train_dataloader):
-        optimizer.zero_grad()
-        output = model(x, debug=False)
-        
-        # 出力と正解の誤差をバッチの数で割る（バッチにおける誤差の平均）
-        loss = F.mse_loss(output, t)
-        loss.backward()
-        if clip > 0:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
-        optimizer.step()
-        batch_idx += 1
-        total_loss += loss.item()
-
-        if batch_idx % 100 == 0:
-            cur_loss = total_loss / batch_idx
-            processed = min(i+batch_size, X_train.size(0))
-            # print('Train Epoch: {:2d} [{:6d}/{:6d} ({:.0f}%)]\tLearning rate: {:.4f}\tLoss: {:.6f}'.format(
-            #     epoch, processed, X_train.size(0), 100.*processed/X_train.size(0), lr, cur_loss))
-            # total_loss = 0
-            
-    return total_loss / batch_idx
-            
-def evaluate(model, epoch=None, train_loss=None):
-    model.eval()
-    with torch.no_grad():
-        test_loss = .0
-        for i, (x,t) in enumerate(test_dataset):
-            output = model(x.reshape(1,2,-1))
-            t_loss = F.mse_loss(output, t.reshape(1,2))
-            test_loss += t_loss.item()
-            
-        test_loss /= len(test_dataset)    
-
-        if epoch % 5 == 0 or epoch == 1:
-            print('\n [epoch: {}] Train loss: {:.6f} \t Test set: Average loss: {:.6f}\n'.format(epoch, train_loss, test_loss))
-        
-        return test_loss
-
-
-
-epoch_list = [20, 30, 50, 100]
-    
 
 # =====Model define=====
 epochs = args.epochs
