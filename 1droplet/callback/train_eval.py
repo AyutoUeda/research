@@ -18,7 +18,7 @@ class TrainEval:
         
     Examples:
         >>> train_eval = TrainEval(model, train_loader, val_loader, criterion, optimizer, clip = -1)
-        >>> loss_list = train_eval.train(num_epochs)
+        >>> loss_dict = train_eval.train(num_epochs)
 
     """
     def __init__(self, model, train_loader, val_loader, criterion, optimizer, clip = -1):
@@ -29,7 +29,7 @@ class TrainEval:
         self.optimizer = optimizer
         self.clip = clip
 
-    def train(self, num_epochs):
+    def train(self, num_epochs) -> dict:
         self.loss = {
             'train': [],
             'val': []
@@ -47,7 +47,7 @@ class TrainEval:
                 self.optimizer.step()
                 train_loss += loss.item()
 
-            train_loss /= len(self.train_loader) # バッチサイズによるロスの平均
+            train_loss /= len(self.train_loader) # バッチサイズごとのロスの平均
             
             # validation
             val_loss, val_accuracy = self.evaluate()
