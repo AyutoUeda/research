@@ -7,6 +7,12 @@ Parse Args:
     
 Example:
     $ python3 tcn_for_1droplet.py --epochs 5 --batch_size 100 --time_step 300
+    
+Note:
+    * 使用するデータはコード内で指定
+    * lr, level, h_dim, kernel_sizeはコード内で指定
+    * 乱数固定
+    * 1つのドロップレットの運動を予測。入力数を拡張する際はmodelのinput_sizeを変更
 
 """
 
