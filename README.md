@@ -20,5 +20,6 @@
 ==> 多少はlossが減った (正答率23%)
 
 **考え**
-===> データ数を増やす、ラベルの偏りをなくす
+===> データ数を増やす、ラベルの偏りをなくす, paramsを減らす
+https://www.tensorflow.org/tutorials/keras/overfit_and_underfit?hl=ja#%E9%81%8E%E5%AD%A6%E7%BF%92%E3%81%AE%E3%83%87%E3%83%A2
 
