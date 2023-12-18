@@ -23,3 +23,7 @@
 ===> データ数を増やす、ラベルの偏りをなくす, paramsを減らす
 https://www.tensorflow.org/tutorials/keras/overfit_and_underfit?hl=ja#%E9%81%8E%E5%AD%A6%E7%BF%92%E3%81%AE%E3%83%87%E3%83%A2
 
+
+精度改善
+- 時間間隔を広げる
+- サンプルとなる油滴の数を増やす
