@@ -6,21 +6,21 @@ class DataProcessing:
     """入力されたデータを基準(target)からの距離と角度に変換するクラス
     
     Args:
-        input_data: 入力データ(numpy.array) \n
-        n_nearest_neighbors: 近傍点の数(int) \n
-        target_no: 基準となる点の番号(int) # 0から始まる \n
-        split_angle: ラベルを振る角度の間隔(int) \n
-        time_range: 何秒間隔のデータを使うか(int) \n
+        input_data: 入力データ(```numpy.array```) \n
+        n_nearest_neighbors: 近傍点の数(```int```) \n
+        target_no: 基準となる点の番号(```int```) # 0から始まる \n
+        split_angle: ラベルを振る角度の間隔(```int```) \n
+        time_range: 何秒間隔のデータを使うか(```int```) \n
     
     Returns:
-        labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る, 0~11, 12は停止 \n
+        labels: 各時刻におけるtargetのラベル(```numpy.array```), 30度ごとにラベルを振る, 0~11, 12は停止 \n
             [基準からの角度1, 基準からの角度2, ...]
-        data_d_and_angle: 各時刻における基準と比べる座標との距離・角度(numpy.array)、比較対象がどの方向に進んでいるか \n
+        data_d_and_angle: 各時刻における基準と比べる座標との距離・角度(```numpy.array```)、比較対象がどの方向に進んでいるか \n
             [[基準からの距離1, 基準からの角度1, neighbor1の速度ベクトルx, neighbor1の速度ベクトルy, 
             基準からの距離2, 基準からの角度2, neighbor2の速度ベクトルx, neighbor2の速度ベクトルy,...], ...]
     
     Example:
-        >>> input_data = [[x1, y1, x2, y2, x3, y3, ...], [x1, y1, x2, y2, x3, y3, ...], ...] \n
+        >>> input_data = np.array([[x1, y1, x2, y2, x3, y3, ...], [x1, y1, x2, y2, x3, y3, ...], ...]) \n
         >>> data_processing = DataProcessing(input_data, target_no=0, n_nearest_neighbors=9) \n
         >>> labels, data_d_and_angle = data_processing() \n
         
