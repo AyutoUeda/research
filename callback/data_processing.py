@@ -6,32 +6,34 @@ class DataProcessing:
     """入力されたデータを基準(target)からの距離と角度に変換するクラス
     
     Args:
-        input_data: 入力データ(numpy.array)
-        n_nearest_neighbors: 近傍点の数(int)
-        target_no: 基準となる点の番号(int) # 0から始まる
-        split_angle: ラベルを振る角度の間隔(int)
+        input_data: 入力データ(numpy.array) \n
+        n_nearest_neighbors: 近傍点の数(int) \n
+        target_no: 基準となる点の番号(int) # 0から始まる \n
+        split_angle: ラベルを振る角度の間隔(int) \n
+        time_range: 何秒間隔のデータを使うか(int) \n
     
     Returns:
-        labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る, 0~11, 12は停止
+        labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る, 0~11, 12は停止 \n
             [基準からの角度1, 基準からの角度2, ...]
-        data_d_and_angle: 各時刻における基準と比べる座標との距離・角度(numpy.array)、比較対象がどの方向に進んでいるか 
+        data_d_and_angle: 各時刻における基準と比べる座標との距離・角度(numpy.array)、比較対象がどの方向に進んでいるか \n
             [[基準からの距離1, 基準からの角度1, neighbor1の速度ベクトルx, neighbor1の速度ベクトルy, 
             基準からの距離2, 基準からの角度2, neighbor2の速度ベクトルx, neighbor2の速度ベクトルy,...], ...]
     
     Example:
-        input_data = [[x1, y1, x2, y2, x3, y3, ...], [x1, y1, x2, y2, x3, y3, ...], ...]
-        data_processing = DataProcessing(input_data, target_no=0, n_nearest_neighbors=9)
-        labels, data_d_and_angle = data_processing()
+        >>> input_data = [[x1, y1, x2, y2, x3, y3, ...], [x1, y1, x2, y2, x3, y3, ...], ...] \n
+        >>> data_processing = DataProcessing(input_data, target_no=0, n_nearest_neighbors=9) \n
+        >>> labels, data_d_and_angle = data_processing() \n
         
     Note:
         基準となる点の番号(target_no)は0から始まる
     """
-    def __init__(self, input_data, n_nearest_neighbors, target_no=0, split_angle=30): 
+    def __init__(self, input_data, n_nearest_neighbors, target_no=0, split_angle=30, time_range=1): 
         self.input_data = input_data[:-1] # ベクトルの計算のために1つずらす
         self.vectors = np.diff(input_data, axis=0) # 次の時刻との差（速度ベクトル）
         self.n_nearest_neighbors = n_nearest_neighbors # 近傍点の数
         self.target_no = target_no # 基準となる点の番号(default: 0)
         self.split_angle = split_angle # ラベルを振る角度の間隔(default: 30度)
+        self.time_range = time_range # 何秒間隔のデータを使うか(default: 1s)
         
     def __call__(self):
         self.labels, self.data_d_and_angle = self.data_create()
@@ -89,6 +91,9 @@ class DataProcessing:
             # =====各点とtargetを比較=====
             temp_list = [] # 基準と各点との比較を格納するリスト
             for j in range(0,temp_coordinate.shape[0], 2):
+                """
+                temp_listには ``d, x_diff, y_diff, atan, vector_x, vector_y`` の順に格納される
+                """
                 if j == self.target_no * 2: # 基準は除く
                     continue
                 else:
@@ -100,6 +105,11 @@ class DataProcessing:
                     d = math.sqrt(x_diff ** 2 + y_diff ** 2)
                     
                     temp_list.append(d)
+                    
+                    # 基準との距離x成分
+                    temp_list.append(x_diff)
+                    # 基準との距離y成分
+                    temp_list.append(y_diff)
                 
                     # 基準との角度
                     if x_diff == 0 and y_diff < 0: # 比べる座標が基準より下にあるとき
@@ -127,20 +137,22 @@ class DataProcessing:
                     temp_list.append(atan)
                     
                     # nearest neighboorsが次の時刻にどの方向に進むか（速度ベクトル）
-                    temp_list.append(vector[j])
-                    temp_list.append(vector[j+1])
+                    temp_list.append(vector[j] / self.time_range)
+                    temp_list.append(vector[j+1] / self.time_range)
                 
             
             # 基準から近い点をn_nearest個取得
             temp_array = np.array(temp_list) # numpy配列に変換
-            min_indices = np.argsort(temp_array[::4])[:self.n_nearest_neighbors] # 基準からの距離でソートし、n_nearest_neighbors個取得
+            min_indices = np.argsort(temp_array[::6])[:self.n_nearest_neighbors] # 基準からの距離でソートし、n_nearest_neighbors個取得
             
             temp_data = []
             for j in min_indices:
-                temp_data.append(temp_array[4*j]) # 基準からの距離
-                temp_data.append(temp_array[4*j+1]) # 基準からの角度
-                temp_data.append(temp_array[4*j+2]) # nearest neighboorsの速度ベクトル x成分
-                temp_data.append(temp_array[4*j+3]) # nearest neighboorsの速度ベクトル y成分
+                # temp_data.append(temp_array[6*j]) # 基準からの距離
+                temp_data.append(temp_array[6*j+1]) # 基準との距離x成分
+                temp_data.append(temp_array[6*j+2]) # 基準との距離y成分
+                # temp_data.append(temp_array[6*j+3]) # 基準からの角度
+                temp_data.append(temp_array[6*j+4]) # nearest neighboorsの速度ベクトル x成分
+                temp_data.append(temp_array[6*j+5]) # nearest neighboorsの速度ベクトル y成分
 
             data_d_and_angle.append(temp_data)
         
