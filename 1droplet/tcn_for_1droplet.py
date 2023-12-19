@@ -6,7 +6,7 @@ Parse Args:
     --time_step: time step
     
 Example:
-    $ python3 tcn_for_1droplet.py --epochs 5 --batch_size 100 --time_step 300
+    >>>$ python3 tcn_for_1droplet.py --epochs 5 --batch_size 100 --time_step 300
     
 Note:
     * 使用するデータはコード内で指定
