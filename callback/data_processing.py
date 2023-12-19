@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 class DataProcessing:
-    """入力されたデータを基準(target)からの距離と角度に変換するクラス
+    """入力されたデータから基準(target)からの距離と角度、近傍点の速度ベクトルに変換するクラス.
     
     Args:
         input_data: 入力データ(```numpy.array```) \n
@@ -26,6 +26,7 @@ class DataProcessing:
         
     Note:
         基準となる点の番号(target_no)は0から始まる
+        
     """
     def __init__(self, input_data, n_nearest_neighbors, target_no=0, split_angle=30, time_range=1): 
         self.input_data = input_data[:-1] # ベクトルの計算のために1つずらす
