@@ -10,6 +10,7 @@ class DataProcessing:
         n_nearest_neighbors: 近傍点の数(int)
         target_no: 基準となる点の番号(int) # 0から始まる
         split_angle: ラベルを振る角度の間隔(int)
+        time_range: 何秒間隔のデータを使うか(int)
     
     Returns:
         labels: 各時刻におけるtargetのラベル(numpy.array), 30度ごとにラベルを振る, 0~11, 12は停止
@@ -26,12 +27,13 @@ class DataProcessing:
     Note:
         基準となる点の番号(target_no)は0から始まる
     """
-    def __init__(self, input_data, n_nearest_neighbors, target_no=0, split_angle=30): 
+    def __init__(self, input_data, n_nearest_neighbors, target_no=0, split_angle=30, time_range=1): 
         self.input_data = input_data[:-1] # ベクトルの計算のために1つずらす
         self.vectors = np.diff(input_data, axis=0) # 次の時刻との差（速度ベクトル）
         self.n_nearest_neighbors = n_nearest_neighbors # 近傍点の数
         self.target_no = target_no # 基準となる点の番号(default: 0)
         self.split_angle = split_angle # ラベルを振る角度の間隔(default: 30度)
+        self.time_range = time_range # 何秒間隔のデータを使うか(default: 1s)
         
     def __call__(self):
         self.labels, self.data_d_and_angle = self.data_create()
@@ -135,8 +137,8 @@ class DataProcessing:
                     temp_list.append(atan)
                     
                     # nearest neighboorsが次の時刻にどの方向に進むか（速度ベクトル）
-                    temp_list.append(vector[j])
-                    temp_list.append(vector[j+1])
+                    temp_list.append(vector[j] / self.time_range)
+                    temp_list.append(vector[j+1] / self.time_range)
                 
             
             # 基準から近い点をn_nearest個取得
@@ -146,8 +148,8 @@ class DataProcessing:
             temp_data = []
             for j in min_indices:
                 # temp_data.append(temp_array[6*j]) # 基準からの距離
-                # temp_data.append(temp_array[6*j+1]) # 基準との距離x成分
-                # temp_data.append(temp_array[6*j+2]) # 基準との距離y成分
+                temp_data.append(temp_array[6*j+1]) # 基準との距離x成分
+                temp_data.append(temp_array[6*j+2]) # 基準との距離y成分
                 # temp_data.append(temp_array[6*j+3]) # 基準からの角度
                 temp_data.append(temp_array[6*j+4]) # nearest neighboorsの速度ベクトル x成分
                 temp_data.append(temp_array[6*j+5]) # nearest neighboorsの速度ベクトル y成分
