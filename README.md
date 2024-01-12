@@ -2,6 +2,32 @@
 
 ## 油滴の運動予測
 
+### RNN
+
+### TCN
+
+- TCNは`2370724/pos-7.dat`のデータに対して実行
+- `tcn_for_1droplet.py`を使用
+- 画像は`oscillated/`, `oscillated_loss/`に格納
+- 結果は`new_model_log_oscillated.csv`に格納
+  
+#### ハイパーパラメータ
+
+- epochs: parse argで指定
+- batch size: parse argで指定
+- time step(train dataの時間間隔): parse argで指定 
+- learning rate: 1e-3
+- level: 3
+- hidden dim: 15
+- kernel size: 5
+
+#### コード実行
+
+```
+>>>$ python3 tcn_for_1droplet.py --epochs 5 --batch_size 100 --time_step 300
+```
+
+
 ## 対象の油滴を方向によるラベリング
 
 ### やったこと1
