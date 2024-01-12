@@ -1,5 +1,3 @@
-# research
-
 ## 油滴の運動予測
 
 ### RNN
@@ -8,7 +6,7 @@
 
 - TCNは`2370724/pos-7.dat`のデータに対して実行
 - `tcn_for_1droplet.py`を使用
-- 画像は`oscillated/`, `oscillated_loss/`に格納
+- 画像は`pred_oscillated/`, `oscillated_loss/`に格納
 - 結果は`new_model_log_oscillated.csv`に格納
   
 #### ハイパーパラメータ
