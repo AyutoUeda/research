@@ -14,8 +14,8 @@
 - epochs: parse argで指定
 - batch size: parse argで指定
 - time step(train dataの時間間隔): parse argで指定 
+- level: parse argで指定
 - learning rate: 1e-3
-- level: 3
 - hidden dim: 15
 - kernel size: 5
 
