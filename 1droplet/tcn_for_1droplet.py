@@ -48,6 +48,8 @@ parser.add_argument('--batch_size', type=int, default=100, metavar='N',
                     help='batch size (default: 100)')
 parser.add_argument('--time_step', type=int, default=300, metavar='N',
                     help='time step (default: 300)')
+parser.add_argument('--level', type=int, default=3, metavar='N',
+                    help='level (default: 3)')
 
 args = parser.parse_args()
 
@@ -151,7 +153,7 @@ test_dataloader = createDataloader(test_size, test_dataset)
 # =====Model define=====
 epochs = args.epochs
 lr = 1e-3
-level = 3
+level = args.level
 h_dim = 15
 kernel_size = 5
 
