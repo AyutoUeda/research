@@ -4,6 +4,7 @@ Parse Args:
     --epochs: epoch数
     --batch_size: batch size
     --time_step: time step
+    --level: level
     
 Example:
     >>>$ python3 tcn_for_1droplet.py --epochs 5 --batch_size 100 --time_step 300
@@ -48,8 +49,8 @@ parser.add_argument('--batch_size', type=int, default=100, metavar='N',
                     help='batch size (default: 100)')
 parser.add_argument('--time_step', type=int, default=300, metavar='N',
                     help='time step (default: 300)')
-parser.add_argument('--level', type=int, default=3, metavar='N',
-                    help='level (default: 3)')
+parser.add_argument('--level', type=int, default=15, metavar='N',
+                    help='level (default: 15)')
 
 args = parser.parse_args()
 
@@ -151,23 +152,25 @@ test_dataloader = createDataloader(test_size, test_dataset)
 
 
 # =====Model define=====
-epochs = args.epochs
+# epochs = args.epochs
+# level = args.level
+epochs = 100
 lr = 1e-3
-level = args.level
+level = 10
 h_dim = 15
-kernel_size = 5
+kernel_size = 7
 
 model = tcn.myTCN(input_size=2, output_size=2, num_channels=[h_dim]*level, kernel_size=kernel_size, dropout=0.0)
 optimizer = getattr(optim, 'Adam')(model.parameters(), lr=lr)
 criterion = nn.MSELoss()
 
-es = earlystopping.EarlyStopping(patience=5, verbose=1)
+es = earlystopping.EarlyStopping(patience=6, verbose=1)
 
 # =====train=====
 train_eval = TrainEval(
-    model, train_dataloader, test_dataloader, criterion=criterion, optimizer=optimizer, clip=-1
+    model, train_dataloader, test_dataloader, criterion=criterion, optimizer=optimizer, clip=-1, early_stopping=es
     )
-loss_dict = train_eval.train(epochs)
+loss_dict, cnt_epochs = train_eval.train(epochs)
 
 
 # =====plot loss=====
@@ -200,19 +203,20 @@ def plot_loss(loss_dict: dict, save: bool=False) -> str:
     plt.legend()
     
     plt.title("TCN \n batch:{}, t_step:{}, epoch:{} \n level:{}, h_dim:{}, k_size:{}, lr:{}".format(
-        batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
+        cnt_epochs, batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
 
     plt.tight_layout()
 
     loss_path = "outputs/oscillated_loss/tcnloss_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
-        batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
+        batch_size, time_step, cnt_epochs,level, h_dim, kernel_size, lr)
     if save:
         plt.savefig(loss_path)
     plt.show()
     
     return loss_path
-    
-loss_path = plot_loss(loss_dict, save=False)
+
+save_bool = False
+loss_path = plot_loss(loss_dict, save=save_bool)
 
 
 # =====prediction=====
@@ -258,11 +262,11 @@ def plot_gen(gen: np.ndarray, save: bool=False) -> str:
 
     # plt.title("TCN \n epoch:{} \n val loss:{:6f}".format(epochs, loss["val_loss"][-1]))
     plt.title("TCN \n val loss:{:6f} \n batch:{}, t_step:{}, epoch:{} \n level:{}, h_dim:{}, k_size:{}, lr:{}".format(
-        loss_dict["val"][-1], batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
+        loss_dict["val"][-1], batch_size, time_step, cnt_epochs, level, h_dim, kernel_size, lr), fontsize=13)
     plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0)
 
     pred_path = "outputs/pred_oscillated/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
-        batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
+        batch_size, time_step, cnt_epochs, level, h_dim, kernel_size, lr)
     
     if save:
         plt.savefig(pred_path)
@@ -271,22 +275,23 @@ def plot_gen(gen: np.ndarray, save: bool=False) -> str:
     
     return pred_path
 
-pred_path = plot_gen(gen, save=False)
+pred_path = plot_gen(gen, save=save_bool)
 
 
 # =====model save and log========
-print("model save")
-
 model_path = "model/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.pth".format(
-    batch_size, time_step, epochs, level, h_dim, kernel_size, lr)
-# torch.save(model, model_path)
+    batch_size, time_step, cnt_epochs, level, h_dim, kernel_size, lr)
+
+if save_bool:
+    print("model save")
+    torch.save(model, model_path)
 
 # =====log=====
 save_output = [{
     "model": "tcn",
     "batch size": batch_size,
     "time step": time_step,
-    "epoch": epochs,
+    "epoch": cnt_epochs,
     "level": level,
     "hidden dim": h_dim,
     "kernel size": kernel_size,
@@ -297,8 +302,10 @@ save_output = [{
     "pred_path": pred_path,
 }]
 
-with open('new_model_log_oscillated.csv','a') as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
-    # writer.writeheader()
-    writer.writerows(save_output)
+
+if save_bool:
+    with open('new_model_log_oscillated.csv','a') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
+        # writer.writeheader()
+        writer.writerows(save_output)
 
