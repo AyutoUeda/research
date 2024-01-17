@@ -22,13 +22,14 @@ class TrainEval:
         >>> loss_dict = train_eval.train(num_epochs)
 
     """
-    def __init__(self, model, train_loader, val_loader, criterion, optimizer, clip = -1):
+    def __init__(self, model, train_loader, val_loader, criterion, optimizer, clip = -1, early_stopping = None):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.criterion = criterion
         self.optimizer = optimizer
         self.clip = clip
+        self.early_stopping = early_stopping
 
     def train(self, num_epochs) -> dict:
         self.loss = {
@@ -36,7 +37,11 @@ class TrainEval:
             'val': []
         }
         
+        epochs = 0
+        
         for epoch in range(num_epochs):
+            epochs += 1 # 何epoch目かをカウント
+            
             self.model.train()
             train_loss = 0.0
 
@@ -57,11 +62,18 @@ class TrainEval:
             self.loss['train'].append(train_loss)
             self.loss['val'].append(val_loss)
             
-            if epoch == 0 or (epoch+1) % 20 == 0:
+            if epoch == 0 or (epoch+1) % 5 == 0:
                 print("[{}/{}] \t Train Loss: {:.5f} \t Validation Loss: {:.5f}"
                     .format(epoch+1, num_epochs, train_loss, val_loss))
+                
+            if self.early_stopping(val_loss):
+                print("=====Early stopping=====")
+                print("[{}/{}] \t Train Loss: {:.5f} \t Validation Loss: {:.5f}"
+                    .format(epoch+1, num_epochs, train_loss, val_loss))
+                break
+                
         
-        return self.loss
+        return self.loss, epochs
     
     def evaluate(self) -> float:
         self.model.eval()
