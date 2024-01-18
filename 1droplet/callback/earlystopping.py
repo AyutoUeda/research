@@ -1,5 +1,10 @@
 class EarlyStopping:
-    """earlystoppingクラス"""
+    """earlystoppingクラス
+    
+    Attributes:
+        patience (int): Number of epochs with no improvement after which training will be stopped.
+        verbose (int): If ``True``, prints a message for each validation loss improvement. Default: ``False``.
+    """
 
     def __init__(self, patience=0, verbose=0):
         self._step = 0

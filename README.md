@@ -11,13 +11,18 @@
   
 #### ハイパーパラメータ
 
-- epochs: parse argで指定
-- batch size: parse argで指定
-- time step(train dataの時間間隔): parse argで指定 
-- level: parse argで指定
+- epochs: early stopping (5回更新がなければ打ち切り)
+- level: 指定
+- hidden dim: 指定
+- kernel size: 指定
+- batch size: 100
+- time step(train dataの時間間隔): 300
 - learning rate: 1e-3
-- hidden dim: 15
-- kernel size: 5
+
+#### 結果
+
+- kernel size は大きいほうが精度がよい
+- levelを上げれば良いというわけではない
 
 #### コード実行
 

@@ -9,7 +9,7 @@ class TrainEval:
     Note:
         Do not include `self` param in ``Args`` section.
     
-    Args:
+    Attributes:
         model (torch.nn.Module): Model to train and evaluate.
         train_loader (torch.utils.data.DataLoader): Training data loader.
         val_loader (torch.utils.data.DataLoader): Validation data loader.
