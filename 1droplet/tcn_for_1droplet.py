@@ -156,15 +156,16 @@ test_dataloader = createDataloader(test_size, test_dataset)
 # level = args.level
 epochs = 100
 lr = 1e-3
-level = 10
-h_dim = 15
-kernel_size = 7
+level = 15
+h_dim = 11
+kernel_size = 8
+
 
 model = tcn.myTCN(input_size=2, output_size=2, num_channels=[h_dim]*level, kernel_size=kernel_size, dropout=0.0)
 optimizer = getattr(optim, 'Adam')(model.parameters(), lr=lr)
 criterion = nn.MSELoss()
 
-es = earlystopping.EarlyStopping(patience=6, verbose=1)
+es = earlystopping.EarlyStopping(patience=5, verbose=1)
 
 # =====train=====
 train_eval = TrainEval(
@@ -203,19 +204,19 @@ def plot_loss(loss_dict: dict, save: bool=False) -> str:
     plt.legend()
     
     plt.title("TCN \n batch:{}, t_step:{}, epoch:{} \n level:{}, h_dim:{}, k_size:{}, lr:{}".format(
-        cnt_epochs, batch_size, time_step, epochs, level, h_dim, kernel_size, lr), fontsize=13)
+        batch_size, time_step, cnt_epochs, level, h_dim, kernel_size, lr), fontsize=13)
 
     plt.tight_layout()
 
-    loss_path = "outputs/oscillated_loss/tcnloss_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
+    loss_path = "outputs/oscillated_es5/loss/tcnloss_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
         batch_size, time_step, cnt_epochs,level, h_dim, kernel_size, lr)
     if save:
         plt.savefig(loss_path)
-    plt.show()
+    # plt.show()
     
     return loss_path
 
-save_bool = False
+save_bool = True
 loss_path = plot_loss(loss_dict, save=save_bool)
 
 
@@ -265,7 +266,7 @@ def plot_gen(gen: np.ndarray, save: bool=False) -> str:
         loss_dict["val"][-1], batch_size, time_step, cnt_epochs, level, h_dim, kernel_size, lr), fontsize=13)
     plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0)
 
-    pred_path = "outputs/pred_oscillated/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
+    pred_path = "outputs/oscillated_es5/pred/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.png".format(
         batch_size, time_step, cnt_epochs, level, h_dim, kernel_size, lr)
     
     if save:
@@ -279,7 +280,7 @@ pred_path = plot_gen(gen, save=save_bool)
 
 
 # =====model save and log========
-model_path = "model/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.pth".format(
+model_path = "model/tcn_with_es/tcn_batch{}_tstep{}_epoch{}_level{}_hdim{}_ksize{}_lr{}.pth".format(
     batch_size, time_step, cnt_epochs, level, h_dim, kernel_size, lr)
 
 if save_bool:
@@ -304,7 +305,7 @@ save_output = [{
 
 
 if save_bool:
-    with open('new_model_log_oscillated.csv','a') as csvfile:
+    with open('tcn_log_oscillated(es5).csv','a') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
         # writer.writeheader()
         writer.writerows(save_output)
