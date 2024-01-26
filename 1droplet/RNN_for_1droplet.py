@@ -119,8 +119,8 @@ def train_func(net, epochs=100, hidden_dim=30, save_bool=False):
     plt.xlabel("epochs")
     plt.ylabel("loss")
     if save_bool:
-        plt.savefig(("1droplet/outputs_rnn/loss/loss_hdim{}.png".format(hidden_dim)))
-    plt.show()
+        plt.savefig(("1droplet/outputs_rnn/loss/loss_tstep{}_hdim{}.png".format(time_step, hidden_dim)))
+    # plt.show()
     
     return hist["val_loss"][-1], log_epochs+1
     
@@ -174,9 +174,9 @@ def future_prediction(net, data, start, pred_len, hidden_dim, save_bool=False):
     plt.title("hidden_dim={} \n start prediction at {} s".format(net.hidden_dim, start))
     
     if save_bool:
-        plt.savefig(("1droplet/outputs_rnn/pred/pred_hdim{}.png".format(hidden_dim)))
+        plt.savefig(("1droplet/outputs_rnn/pred/pred_tstep{}_hdim{}.png".format(time_step, hidden_dim)))
     # plt.savefig("outputs/1droplet/pred_1droplts_hdim{}_at{}.png".format(net.hidden_dim, start))
-    plt.show()
+    # plt.show()
     
     return gen
 
@@ -185,7 +185,9 @@ def future_prediction(net, data, start, pred_len, hidden_dim, save_bool=False):
 if __name__ == "__main__":
     data_path = "1droplet/230724/pos-7.dat"
     time_range = 10
-    time_step = 50
+    
+    
+    time_step = 40
     batch_size = 100
 
     data_for_pred = DataCreate(data_path, time_range=time_range,time_step_for_pred=time_step,batch_size=batch_size, seed=seed)
@@ -218,30 +220,37 @@ if __name__ == "__main__":
 
     input_dim = 2
     output_dim = 2
-    hidden_dim = 64
+    # h_dim = 500
     n_layers = 1
-
-    torch.manual_seed(seed)
-    net = RNN(input_dim, output_dim, hidden_dim, n_layers)
     
-    save_bool = True
+    for h_dim in range(50, 550, 50):
 
-    val_loss, epochs = train_func(net, 100, hidden_dim=hidden_dim, save_bool=save_bool)
-    gen = future_prediction(net, df_for_pred, start=train_size, pred_len=len(df_for_pred)-time_step,hidden_dim=hidden_dim, save_bool=save_bool)
-    
-    # =====log=====
-    save_output = [{
-        "model": "rnn",
-        "hidden dim": hidden_dim,
-        "epochs": epochs,
-        "time step": time_step,   
-        "val loss": round(val_loss, 4),
-        "batch size": batch_size,
-    }]
+        torch.manual_seed(seed)
+        net = RNN(input_dim, output_dim, h_dim, n_layers)
+        
+        save_bool = True
+
+        val_loss, epochs = train_func(net, 100, hidden_dim=h_dim, save_bool=save_bool)
+        gen = future_prediction(net, 
+                                df_for_pred, 
+                                start=train_size, 
+                                pred_len=len(df_for_pred)-time_step,
+                                hidden_dim=h_dim, 
+                                save_bool=save_bool)
+        
+        # =====log=====
+        save_output = [{
+            "model": "rnn",
+            "hidden dim": h_dim,
+            "epochs": epochs, 
+            "val loss": format(val_loss, ".8f"),
+            "time step": time_step,
+            "batch size": batch_size,
+        }]
 
 
-    if save_bool:
-        with open('1droplet/outputs_rnn/rnn_log(es5).csv','w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
-            writer.writeheader()
-            writer.writerows(save_output)
+        if save_bool:
+            with open('1droplet/outputs_rnn/rnn_log(es5).csv','a') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames = list(save_output[0]))
+                # writer.writeheader()
+                writer.writerows(save_output)
