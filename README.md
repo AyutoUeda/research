@@ -2,6 +2,17 @@
 
 ### RNN
 
+
+#### ハイパーパラメータ
+
+- epochs: early stopping (5回更新がなければ打ち切り)
+- hidden dim: tuning
+- kernel size: tuning
+- time step(train dataの時間間隔): tuning
+- batch size: 100
+- learning rate: 1e-3
+
+
 ### TCN
 
 - TCNは`2370724/pos-7.dat`のデータに対して実行
@@ -12,9 +23,9 @@
 #### ハイパーパラメータ
 
 - epochs: early stopping (5回更新がなければ打ち切り)
-- level: 指定
-- hidden dim: 指定
-- kernel size: 指定
+- level: tuning
+- hidden dim: tuning
+- kernel size: tuning
 - batch size: 100
 - time step(train dataの時間間隔): 300
 - learning rate: 1e-3
