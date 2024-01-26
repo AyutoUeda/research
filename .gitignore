@@ -4,6 +4,8 @@
 *.html
 *.png
 *.csv
+*.mp4
+
 # outputsは無視
 outputs/
 
