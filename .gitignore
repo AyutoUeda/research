@@ -9,6 +9,8 @@
 # outputsは無視
 outputs/
 
+30droplets/mov
+
 # model
 1droplet/model/
 
