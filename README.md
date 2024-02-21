@@ -13,8 +13,14 @@
 モデルを記述したファイルとtrainデータを作成するファイルを格納
 
 ### 30droplets
-#### 30droplets/30droplets.ipynb
+#### 30droplets/30droplets.py
 運動方向予測を実行するファイル. 
+
+#### 30droplets/callback/directon_pred_model.py
+モデルを記述
+
+#### 30droplets/callback/train_eval.py
+学習・評価用関数を記述
 
 
 ## 油滴の運動予測
